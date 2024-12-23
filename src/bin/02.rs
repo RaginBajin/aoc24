@@ -1,6 +1,6 @@
 advent_of_code::solution!(2);
-use std::io::{BufRead, Cursor};
 use polars::prelude::*;
+use std::io::{BufRead, Cursor};
 
 pub fn part_one(input: &str) -> Option<u64> {
     // 1) Preprocess input: replace " " with "\t"
@@ -55,11 +55,7 @@ pub fn part_one(input: &str) -> Option<u64> {
         let row_vals: Vec<Option<i64>> = col_names
             .iter()
             .map(|c| {
-                df.column(c)
-                    .unwrap()
-                    .i64()
-                    .unwrap()
-                    .get(row_idx) // Option<i64>
+                df.column(c).unwrap().i64().unwrap().get(row_idx) // Option<i64>
             })
             .collect();
 
@@ -71,34 +67,37 @@ pub fn part_one(input: &str) -> Option<u64> {
         val_flags.push(value_check);
         meets_all_flags.push(meets_all);
     }
-       // Create the new Series
-       let inc_series = Series::new("is_increasing".into(), inc_flags);
-       let dec_series = Series::new("is_decreasing".into(), dec_flags);
-       let check_series = Series::new("valid_check".into(), val_flags);
-       let meets_all_series = Series::new("meets_all_conditions".into(), meets_all_flags);
+    // Create the new Series
+    let inc_series = Series::new("is_increasing".into(), inc_flags);
+    let dec_series = Series::new("is_decreasing".into(), dec_flags);
+    let check_series = Series::new("valid_check".into(), val_flags);
+    let meets_all_series = Series::new("meets_all_conditions".into(), meets_all_flags);
 
-       // Add columns to the DataFrame
-       let df = df
-           .with_column(inc_series).unwrap()
-           .with_column(dec_series).unwrap()
-           .with_column(check_series).unwrap()
-           .with_column(meets_all_series).unwrap();
+    // Add columns to the DataFrame
+    let df = df
+        .with_column(inc_series)
+        .unwrap()
+        .with_column(dec_series)
+        .unwrap()
+        .with_column(check_series)
+        .unwrap()
+        .with_column(meets_all_series)
+        .unwrap();
 
-       println!("\nFinal DataFrame:\n{}", df);
+    println!("\nFinal DataFrame:\n{}", df);
 
-       // Count how many rows had meets_all = true
-       let value: u64 = df
-           .column("meets_all_conditions")
-           .unwrap()
-           .bool()
-           .unwrap()
-           .sum() // sums over bool, treating true=1, false=0
-           .unwrap_or(0)
-           .into();
+    // Count how many rows had meets_all = true
+    let value: u64 = df
+        .column("meets_all_conditions")
+        .unwrap()
+        .bool()
+        .unwrap()
+        .sum() // sums over bool, treating true=1, false=0
+        .unwrap_or(0)
+        .into();
 
-       println!("Number of rows that meet all conditions = {value}");
-       Some(value)
-
+    println!("Number of rows that meet all conditions = {value}");
+    Some(value)
 }
 
 /// A helper that checks a row's sequence with *no* skips.
@@ -203,16 +202,13 @@ pub fn part_two(input: &str) -> Option<u64> {
         let row_vals: Vec<Option<i64>> = col_names
             .iter()
             .map(|c| {
-                df.column(c)
-                    .unwrap()
-                    .i64()
-                    .unwrap()
-                    .get(row_idx) // Option<i64>
+                df.column(c).unwrap().i64().unwrap().get(row_idx) // Option<i64>
             })
             .collect();
 
         // 1) Check the row "as is"
-        let (mut is_increasing, mut is_decreasing, mut value_check) = check_sequence_no_skip(&row_vals);
+        let (mut is_increasing, mut is_decreasing, mut value_check) =
+            check_sequence_no_skip(&row_vals);
         let mut meets_all = (is_increasing || is_decreasing) && value_check;
 
         // 2) If not meets_all, try removing each column in turn
@@ -255,10 +251,14 @@ pub fn part_two(input: &str) -> Option<u64> {
 
     // Add columns to the DataFrame
     let df = df
-        .with_column(inc_series).unwrap()
-        .with_column(dec_series).unwrap()
-        .with_column(check_series).unwrap()
-        .with_column(meets_all_series).unwrap();
+        .with_column(inc_series)
+        .unwrap()
+        .with_column(dec_series)
+        .unwrap()
+        .with_column(check_series)
+        .unwrap()
+        .with_column(meets_all_series)
+        .unwrap();
 
     println!("\nFinal DataFrame:\n{}", df);
 

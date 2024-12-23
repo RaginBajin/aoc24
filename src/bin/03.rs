@@ -1,10 +1,12 @@
 advent_of_code::solution!(3);
 
 pub fn part_one(input: &str) -> Option<u64> {
+    let _ = input;
     None
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
+    let _ = input;
     None
 }
 
