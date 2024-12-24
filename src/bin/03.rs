@@ -84,9 +84,8 @@ pub fn part_two(input: &str) -> Option<u64> {
 
     let chunks = collect_do_dont(input);
     let mut total = 0;
-    for (i, chunk) in chunks.iter().enumerate() {
+    for (_i, chunk) in chunks.iter().enumerate() {
         total += part_one(chunk).unwrap();
-        println!("CHUNK #{}:\n{}\n", i, chunk);
     }
     Some(total)
 }
