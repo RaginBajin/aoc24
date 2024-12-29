@@ -1,49 +1,58 @@
 advent_of_code::solution!(6);
-use std::collections::HashSet;
+use std::{collections::HashSet, ops::Add};
 
 
-fn find_starting_spot(map: &Map) -> ((usize, usize), char) {
+fn find_starting_spot(map: &Map) -> Option<((usize, usize), char)> {
     let directions = ['^', '>', 'v', '<'];
-    let mut starting_spot = ((0, 0), ' ');
-    for (row_index, row) in map.mapdata.iter().enumerate() {
-        for (col_index, &value) in row.iter().enumerate() {
+    map.mapdata.iter().enumerate().find_map(|(row_index, row)| {
+        row.iter().enumerate().find_map(|(col_index, &value)| {
             if directions.contains(&value) {
-                starting_spot = ((row_index, col_index), value);
+                Some(((row_index, col_index), value))
+            } else {
+                None
             }
-        }
-    }
-    starting_spot
+        })
+    })
 }
-
-fn unique_count(vec: Vec<(usize, usize)>) -> usize {
-    let unique_set: HashSet<_> = vec.into_iter().collect(); // Convert Vec to HashSet
-    unique_set.len() // Return the count of unique elements
-}
-
 
 fn look_right(map: &Map, current_location: (usize, usize), direction: char) -> Option<((usize, usize), char)> {
-    let (dx, dy, new_dir) = match direction {
+    let (row_offset, col_offset, new_dir) = match direction {
         '^' => (0, 1, '>'),
         '>' => (1, 0, 'v'),
         'v' => (0, -1, '<'),
         '<' => (-1, 0, '^'),
-        _ => return None,
+        _ => return None, // Invalid direction
     };
+
     let new_location = (
-        (current_location.0 as isize + dx) as usize,
-        (current_location.1 as isize + dy) as usize,
+        current_location.0 as isize + row_offset,
+        current_location.1 as isize + col_offset,
     );
-    if map.mapdata[new_location.0][new_location.1] == '#' {
+
+    if new_location.0 < 0 || new_location.1 < 0 {
+        return None; // Out of bounds
+    }
+
+    let new_location = (new_location.0 as usize, new_location.1 as usize);
+
+    if !is_within_bounds(map, new_location) || map.mapdata[new_location.0][new_location.1] == '#' || map.mapdata[new_location.0][new_location.1] == '0' {
         None
     } else {
         Some((new_location, new_dir))
     }
 }
 
+fn is_within_bounds(map: &Map, location: (usize, usize)) -> bool {
+    location.0 < map.mapdata.len() && location.1 < map.mapdata[0].len()
+}
+
 fn next_step(map: &mut Map) -> Option<((usize, usize), char)> {
-    // Get the current location and direction
-    let current = *map.current_location.last().unwrap();
-    let move_where = match map.current_direction {
+    // Retrieve the current location and direction safely
+    let current_location = map.current_location.last()?;
+    let direction = map.current_direction;
+
+    // Determine the movement offset
+    let move_where  = match direction {
         '^' => (-1, 0),
         '>' => (0, 1),
         'v' => (1, 0),
@@ -52,40 +61,54 @@ fn next_step(map: &mut Map) -> Option<((usize, usize), char)> {
     };
 
     // Calculate the next step
-    let mut check_step = (
-        (current.0 as isize + move_where.0) as usize,
-        (current.1 as isize + move_where.1) as usize,
+    let next_step = (
+        current_location.0 as isize + move_where.0,
+        current_location.1 as isize + move_where.1,
     );
 
     // Check bounds
-    if check_step.0 >= map.rows || check_step.1 >= map.cols {
+    if next_step.0 < 0 || next_step.1 < 0 ||
+       next_step.0 as usize >= map.rows || next_step.1 as usize >= map.cols {
         return None;
     }
 
+    let next_step = (next_step.0 as usize, next_step.1 as usize);
+
     // Check for walls
-    if map.mapdata[check_step.0][check_step.1] == '#' {
-        // Check for Right Turn, but use the current location
-        match look_right(map, *map.current_location.last().unwrap(), map.current_direction) {
-            Some(new_spot) =>  {
-                check_step = new_spot.0;
-                map.current_direction = new_spot.1;
-            },
-            None => {
-                return None;
-            }
+    if map.mapdata[next_step.0][next_step.1] == '#' || map.mapdata[next_step.0][next_step.1] == '0' {
+        // Attempt a right turn
+        if let Some((new_location, new_direction)) = look_right(map, *current_location, direction) {
+            return Some((new_location, new_direction));
+        } else {
+            return None; // No valid move available
         }
     }
 
-    Some((check_step, map.current_direction))
+    // Update the map with the next step
+    Some((next_step, direction))
 }
 
-#[derive(Debug, Clone)]
+fn setup_map(input: &str) -> Option<Map> {
+    let mapdata: Vec<&str> = input.lines().collect();
+    let mut map = Map::new(mapdata);
+
+    if let Some((starting_location, starting_direction)) = find_starting_spot(&map) {
+        map.current_location.push(starting_location);
+        map.current_direction = starting_direction;
+        Some(map)
+    } else {
+        None
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 struct Map {
     mapdata: Vec<Vec<char>>, // Updated type
     rows: usize,
     cols: usize,
     current_location: Vec<(usize, usize)>,
     current_direction: char,
+    guard: Guard,
 }
 
 impl Map {
@@ -99,23 +122,127 @@ impl Map {
             cols,
             current_location: Vec::new(),
             current_direction: ' ',
+            guard: Guard {
+                pos: Pos(0, 0),
+                dir: Dir::Up,
+            },
+        }
+    }
+    
+    fn set_obstactle(&mut self, Pos(x,y): Pos, value: char) {
+
+        if let Some(cell) = self
+        .mapdata
+        .get_mut(x as usize)
+        .and_then(|row| row.get_mut(y as usize))
+        {
+            *cell = value;
+        }
+    }
+
+    fn looping(&mut self, origin: Guard, obstacle: Pos) -> bool {
+        let mut visited  = HashSet::new();
+
+        self.guard = origin;
+        self.set_obstactle(obstacle, '0');
+
+        let looping = loop {
+            if !visited.insert((self.guard.pos, self.guard.dir)) {
+                break true;
+            }
+            if self.next().is_none() {
+                break false;
+            }
+        };
+        self.set_obstactle(obstacle, '.');
+        looping
+
+    }
+
+    fn get(&self, Pos(x, y): Pos) -> Option<char> {
+        self.mapdata.get(x as usize)?.get(y as usize).copied()
+    }
+
+    fn next(&mut self) -> Option<()> {
+        let next = self.guard.pos + self.guard.dir.offset();
+        match self.get(next) {
+            Some('#' | '0') => {
+                self.guard.dir = self.guard.dir.turn();
+                Some(())
+            }
+            Some(_) => {
+                self.guard.pos = next;
+                Some(())
+            }
+            None => None,
+        }
+    }
+
+    fn walk(&mut self) -> HashSet<Pos> {
+        let mut visited = HashSet::new();
+
+        loop {
+            visited.insert(self.guard.pos);
+
+            if self.next().is_none() {
+                break;
+            }
+        }
+        visited
+    }
+}
+
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+struct Guard {
+    pos: Pos,
+    dir: Dir,
+}
+
+struct Off(i32, i32);
+
+impl Add<Off> for Pos {
+    type Output = Self;
+
+    fn add(self, Off(dx, dy): Off) -> Self::Output {
+        Pos(self.0 + dx, self.1 + dy)
+    }
+}
+
+#[derive(Clone, Copy, Eq, Hash, PartialEq, Debug)]
+enum Dir {
+    Up,
+    Down,
+    Right,
+    Left,
+}
+
+impl Dir {
+    fn offset(self) -> Off {
+        match self {
+            Dir::Up => Off(-1, 0),
+            Dir::Down => Off(1, 0),
+            Dir::Right => Off(0, 1),
+            Dir::Left => Off(0, -1),
+        }
+    }
+
+    fn turn(self) -> Self {
+        match self {
+            Dir::Up => Dir::Right,
+            Dir::Right => Dir::Down,
+            Dir::Down => Dir::Left,
+            Dir::Left => Dir::Up,
         }
     }
 }
 
+
+#[derive(Clone, Copy, Default, Eq, Hash, PartialEq, Debug)]
+struct Pos(i32, i32);
+
 pub fn part_one(input: &str) -> Option<u64> {
-    // Collect lines and meta data about the map
-    let mapdata: Vec<&str> = input.lines().collect();
-    let mut map = Map::new(mapdata);
+    let mut map = setup_map(input)?;
 
-    // Step 1: Find Location and Direction - insert into current_location
-    println!("{}", input);
-    let (starting_location, starting_direction) = find_starting_spot(&map);
-    map.current_location.push(starting_location);
-    map.current_direction = starting_direction;
-    println!("Starting Point: {:?}", map.current_location);
-
-    // Step 2: Loop through next steps
     loop {
         match next_step(&mut map) {
             Some(move_spot) => {
@@ -125,30 +252,30 @@ pub fn part_one(input: &str) -> Option<u64> {
             None => break,
         }
     }
-
-    // Step 3: Print out current_location
-    println!("Final Path: {:?}", map.current_location);
-    let mut final_map = map.mapdata.clone();
-    for rows in map.current_location.iter() {
-        final_map[rows.0][rows.1] = 'X';
-    }
-
-    // Convert the final_map into a single String
-    let map_as_string: String = final_map
-    .iter()
-    .map(|row| row.iter().collect::<String>()) // Convert each row (Vec<char>) into a String
-    .collect::<Vec<String>>()                 // Collect all rows into a Vec<String>
-    .join("\n");
-
-    println!("{}", map_as_string);
-    // Step 4: Return current_location.len()
-    Some(unique_count(map.current_location) as u64)
+    // Use HashSet to count unique locations
+    let unique_locations: HashSet<_> = map.current_location.into_iter().collect();
+    Some(unique_locations.len() as u64)
 
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
-    let _ = input;
-    None
+    let mut map = setup_map(input)?;
+    map.guard = match find_starting_spot(&map) {
+        Some((pos, dir)) => Guard {
+            pos: Pos(pos.0 as i32, pos.1 as i32),
+            dir: match dir {
+                '^' => Dir::Up,
+                '>' => Dir::Right,
+                'v' => Dir::Down,
+                '<' => Dir::Left,
+                _ => unreachable!(),
+            },
+        },
+        None => return None,
+    };
+
+    let origin = map.guard;
+    Some(map.walk().iter().filter(|&&obstacle| map.looping(origin, obstacle)).count() as u64)
 }
 
 #[cfg(test)]
@@ -164,6 +291,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(6));
     }
 }
