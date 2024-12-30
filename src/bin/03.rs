@@ -41,7 +41,11 @@ fn collect_do_dont(input: &str) -> Vec<String> {
         // Figure out which token occurs earliest
         let (token, token_pos) = match (do_pos, dont_pos) {
             (Some(dp), Some(dp_dont)) => {
-                if dp < dp_dont { ("do()", dp) } else { ("don't()", dp_dont) }
+                if dp < dp_dont {
+                    ("do()", dp)
+                } else {
+                    ("don't()", dp_dont)
+                }
             }
             (Some(dp), None) => ("do()", dp),
             (None, Some(dp_dont)) => ("don't()", dp_dont),
@@ -81,7 +85,6 @@ fn collect_do_dont(input: &str) -> Vec<String> {
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
-
     let chunks = collect_do_dont(input);
     let mut total = 0;
     for (_i, chunk) in chunks.iter().enumerate() {

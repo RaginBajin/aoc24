@@ -1,7 +1,6 @@
 advent_of_code::solution!(5);
 use std::collections::HashMap;
 
-
 fn build_lookup(record: Vec<String>) -> HashMap<String, usize> {
     let mut row_map = HashMap::new();
     for (col_index, value) in record.iter().enumerate() {
@@ -26,10 +25,7 @@ pub fn part_one(input: &str) -> Option<u64> {
                 rules.entry(key).or_insert_with(Vec::new).push(value);
             }
         } else if line.contains(',') {
-            let entries: Vec<String> = line
-                .split(',')
-                .map(|s| s.trim().to_string())
-                .collect();
+            let entries: Vec<String> = line.split(',').map(|s| s.trim().to_string()).collect();
             data.push(entries);
         }
     }
@@ -64,7 +60,7 @@ pub fn part_one(input: &str) -> Option<u64> {
             passed_records.push(record);
         }
     }
-    let mut total  = 0;
+    let mut total = 0;
     for record in passed_records {
         let mid_index = record.len() / 2;
         total += record[mid_index].parse::<u64>().unwrap();
@@ -73,8 +69,11 @@ pub fn part_one(input: &str) -> Option<u64> {
     Some(total)
 }
 
-fn check_rules(record: Vec<String>, rules: HashMap<String, Vec<String>>, lookup: HashMap<String, usize>) -> bool {
-
+fn check_rules(
+    record: Vec<String>,
+    rules: HashMap<String, Vec<String>>,
+    lookup: HashMap<String, usize>,
+) -> bool {
     let mut rules_passed = true;
     for (col_index, value) in record.iter().enumerate() {
         // Fetch rules for the value
@@ -97,11 +96,11 @@ fn check_rules(record: Vec<String>, rules: HashMap<String, Vec<String>>, lookup:
     rules_passed
 }
 
-fn correctly_sort(input: Vec<String>, rules: HashMap<String, Vec<String>> ) -> Vec<String> {
+fn correctly_sort(input: Vec<String>, rules: HashMap<String, Vec<String>>) -> Vec<String> {
     let mut sorted = input.clone();
     loop {
         let mut is_sorted = true;
-        for i in 0..sorted.len()-1 {
+        for i in 0..sorted.len() - 1 {
             // Safely get the value at index i+1
             let check_value = match rules.get(sorted.get(i + 1).unwrap()) {
                 Some(val) => val,
@@ -121,7 +120,6 @@ fn correctly_sort(input: Vec<String>, rules: HashMap<String, Vec<String>> ) -> V
     }
 }
 
-
 pub fn part_two(input: &str) -> Option<u64> {
     let mut rules: HashMap<String, Vec<String>> = HashMap::new();
     let mut data: Vec<Vec<String>> = Vec::new();
@@ -138,10 +136,7 @@ pub fn part_two(input: &str) -> Option<u64> {
                 rules.entry(key).or_insert_with(Vec::new).push(value);
             }
         } else if line.contains(',') {
-            let entries: Vec<String> = line
-                .split(',')
-                .map(|s| s.trim().to_string())
-                .collect();
+            let entries: Vec<String> = line.split(',').map(|s| s.trim().to_string()).collect();
             data.push(entries);
         }
     }
@@ -167,7 +162,7 @@ pub fn part_two(input: &str) -> Option<u64> {
     }
 
     // Final Step - Add up Middle passing Records
-    let mut total  = 0;
+    let mut total = 0;
     for record in fixed_records {
         let mid_index = record.len() / 2;
         total += record[mid_index].parse::<u64>().unwrap();

@@ -1,7 +1,6 @@
 advent_of_code::solution!(6);
 use std::{collections::HashSet, ops::Add};
 
-
 fn find_starting_spot(map: &Map) -> Option<((usize, usize), char)> {
     let directions = ['^', '>', 'v', '<'];
     map.mapdata.iter().enumerate().find_map(|(row_index, row)| {
@@ -15,7 +14,11 @@ fn find_starting_spot(map: &Map) -> Option<((usize, usize), char)> {
     })
 }
 
-fn look_right(map: &Map, current_location: (usize, usize), direction: char) -> Option<((usize, usize), char)> {
+fn look_right(
+    map: &Map,
+    current_location: (usize, usize),
+    direction: char,
+) -> Option<((usize, usize), char)> {
     let (row_offset, col_offset, new_dir) = match direction {
         '^' => (0, 1, '>'),
         '>' => (1, 0, 'v'),
@@ -35,7 +38,10 @@ fn look_right(map: &Map, current_location: (usize, usize), direction: char) -> O
 
     let new_location = (new_location.0 as usize, new_location.1 as usize);
 
-    if !is_within_bounds(map, new_location) || map.mapdata[new_location.0][new_location.1] == '#' || map.mapdata[new_location.0][new_location.1] == '0' {
+    if !is_within_bounds(map, new_location)
+        || map.mapdata[new_location.0][new_location.1] == '#'
+        || map.mapdata[new_location.0][new_location.1] == '0'
+    {
         None
     } else {
         Some((new_location, new_dir))
@@ -52,7 +58,7 @@ fn next_step(map: &mut Map) -> Option<((usize, usize), char)> {
     let direction = map.current_direction;
 
     // Determine the movement offset
-    let move_where  = match direction {
+    let move_where = match direction {
         '^' => (-1, 0),
         '>' => (0, 1),
         'v' => (1, 0),
@@ -67,15 +73,19 @@ fn next_step(map: &mut Map) -> Option<((usize, usize), char)> {
     );
 
     // Check bounds
-    if next_step.0 < 0 || next_step.1 < 0 ||
-       next_step.0 as usize >= map.rows || next_step.1 as usize >= map.cols {
+    if next_step.0 < 0
+        || next_step.1 < 0
+        || next_step.0 as usize >= map.rows
+        || next_step.1 as usize >= map.cols
+    {
         return None;
     }
 
     let next_step = (next_step.0 as usize, next_step.1 as usize);
 
     // Check for walls
-    if map.mapdata[next_step.0][next_step.1] == '#' || map.mapdata[next_step.0][next_step.1] == '0' {
+    if map.mapdata[next_step.0][next_step.1] == '#' || map.mapdata[next_step.0][next_step.1] == '0'
+    {
         // Attempt a right turn
         if let Some((new_location, new_direction)) = look_right(map, *current_location, direction) {
             return Some((new_location, new_direction));
@@ -128,20 +138,19 @@ impl Map {
             },
         }
     }
-    
-    fn set_obstactle(&mut self, Pos(x,y): Pos, value: char) {
 
+    fn set_obstactle(&mut self, Pos(x, y): Pos, value: char) {
         if let Some(cell) = self
-        .mapdata
-        .get_mut(x as usize)
-        .and_then(|row| row.get_mut(y as usize))
+            .mapdata
+            .get_mut(x as usize)
+            .and_then(|row| row.get_mut(y as usize))
         {
             *cell = value;
         }
     }
 
     fn looping(&mut self, origin: Guard, obstacle: Pos) -> bool {
-        let mut visited  = HashSet::new();
+        let mut visited = HashSet::new();
 
         self.guard = origin;
         self.set_obstactle(obstacle, '0');
@@ -156,7 +165,6 @@ impl Map {
         };
         self.set_obstactle(obstacle, '.');
         looping
-
     }
 
     fn get(&self, Pos(x, y): Pos) -> Option<char> {
@@ -236,7 +244,6 @@ impl Dir {
     }
 }
 
-
 #[derive(Clone, Copy, Default, Eq, Hash, PartialEq, Debug)]
 struct Pos(i32, i32);
 
@@ -255,7 +262,6 @@ pub fn part_one(input: &str) -> Option<u64> {
     // Use HashSet to count unique locations
     let unique_locations: HashSet<_> = map.current_location.into_iter().collect();
     Some(unique_locations.len() as u64)
-
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
@@ -275,7 +281,12 @@ pub fn part_two(input: &str) -> Option<u64> {
     };
 
     let origin = map.guard;
-    Some(map.walk().iter().filter(|&&obstacle| map.looping(origin, obstacle)).count() as u64)
+    Some(
+        map.walk()
+            .iter()
+            .filter(|&&obstacle| map.looping(origin, obstacle))
+            .count() as u64,
+    )
 }
 
 #[cfg(test)]

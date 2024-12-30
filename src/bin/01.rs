@@ -130,7 +130,7 @@ pub fn part_two(input: &str) -> Option<u64> {
         .lazy()
         .join(
             grouped.lazy(),
-            [col("column_0")],   // from the left DF
+            [col("column_0")], // from the left DF
             [col("column_1")], // from the right DF
             JoinType::Left.into(),
         )

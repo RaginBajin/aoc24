@@ -1,6 +1,6 @@
 advent_of_code::solution!(4);
-use std::error::Error;
 use regex::Regex;
+use std::error::Error;
 
 fn extract_diagonals_vertical(input: &str) -> Result<Vec<String>, Box<dyn Error>> {
     let lines: Vec<&str> = input.lines().collect();
@@ -15,53 +15,52 @@ fn extract_diagonals_vertical(input: &str) -> Result<Vec<String>, Box<dyn Error>
 
     // Top-left to bottom-right diagonals
     for r in 0..=(rows - 4) {
-      //  println!("TL Data: {}", lines[r] );
+        //  println!("TL Data: {}", lines[r] );
         for c in 0..=(cols - 4) {
             let diagonal: String = (0..4)
                 .map(|i| {
                     let pair = (r + i, c + i); // Current (row, column) pair
-             //       println!("TL pair: {:?}", pair);
+                                               //       println!("TL pair: {:?}", pair);
                     lines[pair.0].chars().nth(pair.1).unwrap()
                 })
                 .collect();
-         //   println!("TL Diagonal: {}", diagonal);
+            //   println!("TL Diagonal: {}", diagonal);
             diagonals.push(diagonal);
         }
     }
 
     // Top-right to bottom-left diagonals
     for r in 0..=(rows - 4) {
-      //  println!("TR Data: {}", lines[r] );
+        //  println!("TR Data: {}", lines[r] );
         for c in 3..cols {
             let diagonal: String = (0..4)
                 .map(|i| {
                     let pair = (r + i, c - i); // Current (row, column) pair
-                 //   println!("TL pair: {:?}", pair);
+                                               //   println!("TL pair: {:?}", pair);
                     lines[pair.0].chars().nth(pair.1).unwrap()
                 })
                 .collect();
-          //  println!("TR Diagonal: {}", diagonal);
+            //  println!("TR Diagonal: {}", diagonal);
             diagonals.push(diagonal);
-            }
+        }
     }
 
     // Verticals
     for r in 0..=(rows - 4) {
-     //   println!("V Data: {}", lines[r] );
+        //   println!("V Data: {}", lines[r] );
         for c in 0..cols {
-          //  println!("V-V c: {}", c);
+            //  println!("V-V c: {}", c);
             let diagonal: String = (0..4)
                 .map(|i| {
                     let pair = (r + i, c); // Current (row, column) pair
-                   // println!("TL pair: {:?}", pair);
+                                           // println!("TL pair: {:?}", pair);
                     lines[pair.0].chars().nth(pair.1).unwrap()
                 })
                 .collect();
-           // println!("V Diagonal: {}", diagonal);
+            // println!("V Diagonal: {}", diagonal);
             diagonals.push(diagonal);
-            }
+        }
     }
-
 
     Ok(diagonals)
 }
@@ -78,14 +77,20 @@ fn extract_diagonals(input: &str, row: usize, col: usize) -> Vec<String> {
     let mut diagonals = Vec::new();
 
     // Top-left to bottom-right diagonals
-    let tl = format!("{}{}{}", lines[row - 1].chars().nth(col - 1).unwrap(),
-                lines[row].chars().nth(col).unwrap(),
-                lines[row + 1].chars().nth(col + 1).unwrap());
+    let tl = format!(
+        "{}{}{}",
+        lines[row - 1].chars().nth(col - 1).unwrap(),
+        lines[row].chars().nth(col).unwrap(),
+        lines[row + 1].chars().nth(col + 1).unwrap()
+    );
     diagonals.push(tl);
     // Top-right to bottom-left diagonals
-    let tr = format!("{}{}{}", lines[row - 1].chars().nth(col + 1).unwrap(),
-                lines[row].chars().nth(col).unwrap(),
-                lines[row + 1].chars().nth(col - 1).unwrap());
+    let tr = format!(
+        "{}{}{}",
+        lines[row - 1].chars().nth(col + 1).unwrap(),
+        lines[row].chars().nth(col).unwrap(),
+        lines[row + 1].chars().nth(col - 1).unwrap()
+    );
     diagonals.push(tr);
 
     diagonals
@@ -105,7 +110,7 @@ pub fn part_one(input: &str) -> Option<u64> {
     let mut diagonals_refs: Vec<&str> = diagonals.iter().map(|s| s.as_str()).collect();
     data.append(&mut diagonals_refs);
 
-   // println!("Data: {:?}", data);
+    // println!("Data: {:?}", data);
     let mut total = 0;
 
     // Iterate over each line to find all matches
@@ -121,7 +126,6 @@ pub fn part_one(input: &str) -> Option<u64> {
     Some(total)
 }
 
-
 pub fn part_two(input: &str) -> Option<u64> {
     let word = "MAS";
 
@@ -135,11 +139,13 @@ pub fn part_two(input: &str) -> Option<u64> {
     let rows = data.len();
     let cols = data[0].len();
 
-   // println!("Data: {:?}", data);
+    // println!("Data: {:?}", data);
     let mut total = 0;
 
-    for r in 1..=(rows - 1){ // Start with Row 1 to find the 'A' and end 1 before
-        for c in 1..=(cols - 1) { // Start with Col 1 to find the 'A' and end 1 before
+    for r in 1..=(rows - 1) {
+        // Start with Row 1 to find the 'A' and end 1 before
+        for c in 1..=(cols - 1) {
+            // Start with Col 1 to find the 'A' and end 1 before
             let mut sub_total = 0;
 
             // Step 1: Search for A in each row of Data
@@ -176,4 +182,3 @@ mod tests {
         assert_eq!(result, Some(9));
     }
 }
-
