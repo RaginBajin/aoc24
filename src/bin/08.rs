@@ -1,5 +1,5 @@
 advent_of_code::solution!(8);
-use std::{collections::{HashMap, HashSet}, ops::{Add, Sub}};
+use std::{collections::{HashMap, HashSet}, ops::{Add, AddAssign, Sub}};
 
 #[derive(Clone, Copy, Default, Hash, Eq)]
 struct Point(i32, i32);
@@ -24,6 +24,13 @@ impl Sub for Point {
     fn sub(self, other: Self) -> Self {
         Self(self.0 - other.0, self.1 - other.1)
     }
+}
+
+impl AddAssign for Point {
+    fn add_assign(&mut self, other: Self) {
+        *self = Self(self.0 + other.0, self.1 + other.1)
+    }
+    
 }
 
 struct Map {
@@ -61,6 +68,24 @@ impl Map {
         }
         antinodes
     }
+
+    fn harmonics(&self) -> HashSet<Point> {
+        let mut antinodes = HashSet::new();
+        let pairs = self.get_pairs();
+
+        for (p1, p2) in pairs {
+            [(p1, p1-p2), (p2, p2-p1)]
+                .into_iter()
+                .for_each(| (mut point, offset) |   {
+                    while self.get(point).is_some()
+                    {
+                        antinodes.insert(point);
+                        point += offset;
+                    }
+                })
+        }
+        antinodes
+    }
 }
 
 
@@ -93,8 +118,9 @@ pub fn part_one(input: &str) -> Option<u64> {
     Some(count)
 }
 pub fn part_two(input: &str) -> Option<u64> {
-    let _ = input;
-    None
+    let map = Map::from(input);
+    let count = map.harmonics().len() as u64;
+    Some(count)
 }
 
 #[cfg(test)]
@@ -110,6 +136,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(34));
     }
 }
