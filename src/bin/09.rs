@@ -38,6 +38,33 @@ impl DiskMap {
         }
         Self { disk }
     }
+
+    fn defragment_by_file(&mut self) -> Self {
+        let mut disk = VecDeque::new();
+
+        while let Some(block) = self.disk.pop_front() {
+            match block {
+                Block::File { .. } => disk.push_back(block),
+                Block::Free { size: mut free } => {
+                    (0..self.disk.len()).rev().for_each(|i| {
+                        if let Block::File { size, .. } = self.disk[i] {
+                            if size <= free {
+                                disk.push_back(self.disk[i]);
+                                self.disk.remove(i);
+                                self.disk.insert(i, Block::Free { size });
+                                free -= size;
+                            }
+                        }
+                    });
+                    if free > 0 {
+                        disk.push_back(Block::Free { size: free })
+                    }
+                }
+            }
+        }
+        Self { disk }
+    }
+
     fn checksum(&self) -> usize {
         self.disk
             .iter()
@@ -87,8 +114,12 @@ pub fn part_one(input: &str) -> Option<usize> {
 }
 
 pub fn part_two(input: &str) -> Option<usize> {
-    let _ = input;
-    None
+    Some(
+        DiskMap::from(input)
+            .defragment_by_file()
+            .decompress()
+            .checksum(),
+    )
 }
 
 #[cfg(test)]
@@ -104,6 +135,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(2858));
     }
 }
